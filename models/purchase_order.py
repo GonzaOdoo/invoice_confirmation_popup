@@ -5,7 +5,7 @@ _logger=logging.getLogger(__name__)
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
-    picking_type_id = fields.Many2one('stock.picking.type', 'Entregar', required=True, default=False, domain="['|', ('warehouse_id', '=', False), ('warehouse_id.company_id', '=', company_id)]",
+    picking_type_id = fields.Many2one('stock.picking.type', 'Entregar', required=False, default=False, domain="['|', ('warehouse_id', '=', False), ('warehouse_id.company_id', '=', company_id)]",
         help="This will determine operation type of incoming shipment")
     @api.model
     def default_get(self, fields_list):
