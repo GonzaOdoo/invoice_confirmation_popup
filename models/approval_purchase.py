@@ -15,6 +15,8 @@ class ApprovalRequest(models.Model):
         self.ensure_one()
         self.product_line_ids._check_products_vendor()
 
+        purchase_orders_to_update = self.env['purchase.order']
+
         for line in self.product_line_ids:
             seller = line._get_seller_id()
             vendor = seller.partner_id
@@ -49,6 +51,7 @@ class ApprovalRequest(models.Model):
                     new_po_line = self.env['purchase.order.line'].create(po_line_vals)
                     line.purchase_order_line_id = new_po_line.id
                     purchase_order.order_line = [(4, new_po_line.id)]
+                purchase_orders_to_update |= purchase_order
 
                 # Add the request name on the purchase order `origin` field.
                 new_origin = set([self.name])
@@ -73,5 +76,9 @@ class ApprovalRequest(models.Model):
                 new_po_line = self.env['purchase.order.line'].create(po_line_vals)
                 line.purchase_order_line_id = new_po_line.id
                 new_purchase_order.order_line = [(4, new_po_line.id)]
-                new_purchase_order.picking_type_id = False
+                purchase_orders_to_update |= new_purchase_order
                 _logger.info('Inherited')
+
+        purchase_orders_to_update.write({'picking_type_id': False})
+
+        _logger.info('Inherited: Updated picking_type_id = False on POs %s', purchase_orders_to_update.ids)
