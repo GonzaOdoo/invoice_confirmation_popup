@@ -11,7 +11,7 @@ class PurchaseOrder(models.Model):
 
     def _compute_is_only_service(self):
         for record in self:
-            record.is_only_service = all(line.product_id.type == 'consu' for line in record.order_line if line.product_id)
+            record.is_only_service = any(line.product_id.type == 'product' for line in record.order_line if line.product_id)
             
     @api.model
     def default_get(self, fields_list):
