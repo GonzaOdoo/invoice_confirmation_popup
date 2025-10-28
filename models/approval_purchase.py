@@ -7,9 +7,25 @@ from odoo.tools.misc import clean_context
 import logging
 
 _logger = logging.getLogger(__name__)
+class PurchaseOrderLine(models.Model):
+    _inherit = 'purchase.order.line'
+
+    @api.model
+    def _prepare_purchase_order_line(self, product_id, product_qty, product_uom_id, company_id, supplier_info, po):
+        """ Sobrescribimos para permitir inyectar una descripción personalizada desde approval. """
+        vals = super()._prepare_purchase_order_line(
+            product_id, product_qty, product_uom_id, company_id, supplier_info, po
+        )
+        # Intentamos obtener la descripción personalizada desde el contexto
+        custom_description = self.env.context.get('custom_po_description')
+        if custom_description:
+            vals['name'] = custom_description
+
+        return vals
+#reason
+
 class ApprovalRequest(models.Model):
     _inherit = 'approval.request'
-
     def action_create_purchase_orders(self):
         """ Create and/or modifier Purchase Orders. """
         self.ensure_one()
@@ -40,7 +56,9 @@ class ApprovalRequest(models.Model):
                 else:
                     # No purchase order line found, create one.
                     purchase_order = purchase_orders[0]
-                    po_line_vals = self.env['purchase.order.line']._prepare_purchase_order_line(
+                    po_line_vals = self.env['purchase.order.line'].with_context(
+                        custom_po_description=line.description or line.name
+                    )._prepare_purchase_order_line(
                         line.product_id,
                         line.quantity,
                         line.product_uom_id,
@@ -65,7 +83,10 @@ class ApprovalRequest(models.Model):
                 # No RFQ found: create a new one.
                 po_vals = line._get_purchase_order_values(vendor)
                 new_purchase_order = self.env['purchase.order'].create(po_vals)
-                po_line_vals = self.env['purchase.order.line']._prepare_purchase_order_line(
+                new_purchase_order.notes = self.reason if self.reason else ""
+                po_line_vals = self.env['purchase.order.line'].with_context(
+                    custom_po_description=line.description or line.name
+                )._prepare_purchase_order_line(
                     line.product_id,
                     line.quantity,
                     line.product_uom_id,

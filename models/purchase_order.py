@@ -7,6 +7,12 @@ class PurchaseOrder(models.Model):
 
     picking_type_id = fields.Many2one('stock.picking.type', 'Entregar', required=False, default=False, domain="['|', ('warehouse_id', '=', False), ('warehouse_id.company_id', '=', company_id)]",
         help="This will determine operation type of incoming shipment")
+    is_only_service = fields.Boolean(string="Es servicio?",compute='_compute_is_only_service')
+
+    def _compute_is_only_service(self):
+        for record in self:
+            record.is_only_service = all(line.product_id.type == 'consu' for line in record.order_line if line.product_id)
+            
     @api.model
     def default_get(self, fields_list):
         # Llamamos al original para obtener todos los defaults (partner, company, etc.)

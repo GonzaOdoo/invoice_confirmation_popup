@@ -20,7 +20,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['account','purchase_stock','approvals_purchase'],
+    'depends': ['account','purchase_stock','approvals_purchase','stock'],
     'data':[
         'views/views.xml',
         'security/ir.model.access.csv',
