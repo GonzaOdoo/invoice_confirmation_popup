@@ -46,9 +46,7 @@ class ApprovalRequest(models.Model):
                 # Crear nueva orden
                 po_vals = line._get_purchase_order_values(vendor)
                 purchase_order = self.env['purchase.order'].create(po_vals)
-                _logger.info('Ordén creada')
-                _logger.info(purchase_order)
-            # ✅ Siempre crear una NUEVA línea, sin buscar existentes
+            # Siempre crear una NUEVA línea, sin buscar existentes
             po_line_vals = self.env['purchase.order.line'].with_context(
                 custom_po_description=line.description or line.name
             )._prepare_purchase_order_line(
