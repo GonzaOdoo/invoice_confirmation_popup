@@ -59,11 +59,12 @@ class ApprovalRequest(models.Model):
             )
             new_po_line = self.env['purchase.order.line'].create(po_line_vals)
             line.purchase_order_line_id = new_po_line.id
-    
+            purchase_orders_to_update |= purchase_order
             # Actualizar origin
             new_origin = {self.name}
             origins = set((purchase_order.origin or '').split(', ')) - {''}
             if not new_origin.issubset(origins):
                 origins.update(new_origin)
                 purchase_order.write({'origin': ', '.join(sorted(origins))})
+        purchase_orders_to_update.write({'picking_type_id': False})
                
