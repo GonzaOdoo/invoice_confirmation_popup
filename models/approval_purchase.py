@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models, _
-from odoo.exceptions import UserError
-from odoo.tools.misc import clean_context
+from odoo import api, models, _
+
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -11,10 +10,10 @@ class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
     @api.model
-    def _prepare_purchase_order_line(self, product_id, product_qty, product_uom_id, company_id, supplier_info, po):
+    def _prepare_purchase_order_line(self, product_id, product_qty, product_uom_id, company_id, partner_id, po):
         """ Sobrescribimos para permitir inyectar una descripción personalizada desde approval. """
         vals = super()._prepare_purchase_order_line(
-            product_id, product_qty, product_uom_id, company_id, supplier_info, po
+            product_id, product_qty, product_uom_id, company_id, partner_id, po
         )
         # Intentamos obtener la descripción personalizada desde el contexto
         custom_description = self.env.context.get('custom_po_description')
@@ -34,7 +33,7 @@ class ApprovalRequest(models.Model):
         purchase_orders_to_update = self.env['purchase.order']
 
         for line in self.product_line_ids:
-            seller = line._get_seller_id()
+            seller = line.seller_id
             vendor = seller.partner_id
             po_domain = line._get_purchase_orders_domain(vendor)
             purchase_orders = self.env['purchase.order'].search(po_domain)
@@ -54,7 +53,7 @@ class ApprovalRequest(models.Model):
                 line.quantity,
                 line.product_uom_id,
                 line.company_id,
-                seller,
+                vendor,
                 purchase_order,
             )
             new_po_line = self.env['purchase.order.line'].create(po_line_vals)
