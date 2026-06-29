@@ -32,35 +32,14 @@ class StockMove(models.Model):
 
     @api.depends('move_line_ids.quantity', 'move_line_ids.product_uom_id')
     def _compute_quantity(self):
-        _logger.info("Computing quantity")
         for move in self:
-            has_tracking_lines = any(line.lot_id or line.lot_name for line in move.move_line_ids)
-            if move.initial_purchase_quantity_zero :
+            if move.initial_purchase_quantity_zero:
+                has_tracking_lines = any(
+                    line.lot_id or line.lot_name
+                    for line in move.move_line_ids
+                )
+    
                 if move.quantity == 0 and not has_tracking_lines:
-                    # Primera ejecución - mantener 0
-                    now = fields.Datetime.now()
-                    time_threshold = now - timedelta(seconds=5)
-                    
-                    if move.move_line_ids:
-                        all_recent = True
-                        for line in move.move_line_ids:
-                            if not line.create_date:
-                                all_recent = False
-                                break
-                            create_date = fields.Datetime.from_string(line.create_date)
-                            if create_date <= time_threshold:
-                                all_recent = False
-                                break
-                        
-                        if all_recent:
-                            _logger.info("Deleting automatically created lines for move %s", move.id)
-                            move.move_line_ids.unlink()
                     continue
-                else:
-                    # Permitir cálculo normal y resetear flag
-                    super(StockMove, move)._compute_quantity()
-                    move.initial_purchase_quantity_zero = False
-                    continue
-            else:
-                # Comportamiento normal
-                super(StockMove, move)._compute_quantity()
+    
+            super(StockMove, move)._compute_quantity()
