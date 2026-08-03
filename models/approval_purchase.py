@@ -45,6 +45,10 @@ class ApprovalRequest(models.Model):
             else:
                 # Crear nueva orden
                 po_vals = line._get_purchase_order_values(vendor)
+                po_vals.update({
+                    'requirement_note': self.reason,
+                    'requirement_user': self.request_owner_id.id,
+                })
                 purchase_order = self.env['purchase.order'].create(po_vals)
             # Siempre crear una NUEVA línea, sin buscar existentes
             po_line_vals = self.env['purchase.order.line'].with_context(
@@ -57,6 +61,7 @@ class ApprovalRequest(models.Model):
                 vendor,
                 purchase_order,
             )
+            
             new_po_line = self.env['purchase.order.line'].create(po_line_vals)
             line.purchase_order_line_id = new_po_line.id
             purchase_orders_to_update |= purchase_order

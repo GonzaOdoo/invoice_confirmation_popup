@@ -8,6 +8,8 @@ class PurchaseOrder(models.Model):
     picking_type_id = fields.Many2one('stock.picking.type', 'Entregar', required=False, default=False, domain="['|', ('warehouse_id', '=', False), ('warehouse_id.company_id', '=', company_id)]",
         help="This will determine operation type of incoming shipment")
     is_only_service = fields.Boolean(string="Es servicio?",compute='_compute_is_only_service')
+    requirement_note = fields.Html(string="Nota de requirimiento")
+    requirement_user = fields.Many2one('res.users',string='Usuario de requirimiento')
 
     def _compute_is_only_service(self):
         for record in self:
